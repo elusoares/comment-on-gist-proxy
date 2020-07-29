@@ -138,7 +138,7 @@ app.get('/get-token', (req, res) => {
                             // se nao, ta tudo certo
                             console.log('nao tem erro com os dados do user');
                             const userInfo = {
-                                data: {
+                                user: {
                                     name: response.data['name'],
                                     avatar_url: response.data['avatar_url']
                                 },
@@ -163,12 +163,31 @@ app.get('/get-token', (req, res) => {
         });
 });
 
-// cliente acessa essa rota mandando o token
-app.get('/get-user-data', (req, res) => {
+app.get('/get-gist', (req, res) => {
     const token = req.query.token;
-    console.log('token');
-    console.log(token);
-    
+    const git_id = req.query.git_id;
+    const options = { 
+        headers: { 
+            authorization: `token ${token}` 
+        }
+    };
+    // requisita os dados do usuario
+    axios.get(`https://api.github.com/gists/${git_id}`, options)
+        .then((response) => {
+            const data = response.data;
+            if(data.error) {
+                console.log('tem erro com o gist');
+                console.log(data);
+                res.status(401).send(data.error);
+            } else {
+                console.log('nao tem erro com o gist');
+                res.json(data);
+                console.log('deu certo mandar o gist');
+            }
+        })
+        .catch((error) => {
+            console.log(error);
+        });
 });
 
 
