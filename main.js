@@ -101,7 +101,8 @@ app.get('/get-token', (req, res) => {
     const body = {
         client_id: client_id,
         client_secret: client_secret,
-        scope: ['user', 'gist'],
+        scope: 'repo',
+        // scope:  ['user', 'gist'],
         code: code
     };
     const options = { 
@@ -112,6 +113,7 @@ app.get('/get-token', (req, res) => {
     // faz uma requisicao a api para q ela mande de volta o token
     axios.post('https://github.com/login/oauth/access_token', body, options)
         .then((response) => {
+            console.log(response);
             // a api vai responder com o token ou com um erro se os parametros enviados
             // nao forem validos
             const data = response.data;
@@ -174,8 +176,6 @@ app.get('/get-gist', (req, res) => {
     // recebe do cliente o token e o id do gist
     const token = req.query.token;
     const gist_id = req.query.gist_id;
-    console.log(token);
-    console.log(gist_id);
     const options = { 
         headers: { 
             authorization: `token ${token}` 
@@ -210,8 +210,6 @@ app.get('/get-comments', (req, res) => {
     // recebe do cliente o token e o id do gist
     const token = req.query.token;
     const gist_id = req.query.gist_id;
-    console.log(token);
-    console.log(gist_id);
     const options = { 
         headers: { 
             authorization: `token ${token}` 
@@ -238,6 +236,40 @@ app.get('/get-comments', (req, res) => {
         .catch((error) => {
             console.log('erro catch comments');
             // console.log(error)
+        });
+});
+
+// essa rota vai postar um comentario em determinado gist
+app.get('/post-comment', (req, res) => {
+    // recebe do cliente o token, o comentario e o id do gist
+    const comment = req.query.comment; 
+    const gist_id = req.query.gist_id;
+    const token = req.query.token;
+    console.log(comment);
+    console.log(gist_id);
+    console.log(token);
+    // monta os parametros, incluindo o comentario
+    // pra receber o token precisa enviar esse clientId e clientSecret
+    const body = {
+        body: comment
+    };
+    const options = { 
+        headers: { 
+            authorization: `token ${token}` 
+        }
+    };
+    // envia o comentario a api
+    axios.post(`https://api.github.com/gists/${gist_id}/comments`, body, options)
+        .then((response) => {
+            // a api vai responder com status 201 ou com um erro se os parametros enviados
+            // nao forem validos
+            const data = response.data;
+            res.json(data);            
+        })
+        .catch((error) => {
+            // erro ao postar comentario
+            console.log('erro aqui no catch do comentario');
+            res.status(error.response.status).send(error.response.statusText);
         });
 });
 
