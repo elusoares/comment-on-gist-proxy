@@ -101,9 +101,9 @@ app.get('/get-token', (req, res) => {
     const body = {
         client_id: client_id,
         client_secret: client_secret,
-        scope: 'repo',
-        // scope:  ['user', 'gist'],
+        // client_secret: 'fksfksdhfkahsdjkfhakjsfhjksd',
         code: code
+        // code: 'KSDKHKASDKAldsjakd'
     };
     const options = { 
         headers: { 
@@ -113,15 +113,16 @@ app.get('/get-token', (req, res) => {
     // faz uma requisicao a api para q ela mande de volta o token
     axios.post('https://github.com/login/oauth/access_token', body, options)
         .then((response) => {
-            console.log(response);
+            // console.log(response);
             // a api vai responder com o token ou com um erro se os parametros enviados
-            // nao forem validos
+            // nao forem validos.
+            // tive que testar o erro com if. Por que sera que a api nao retorna um erro no catch nessa rota?
             const data = response.data;
             // testa pra ver se tem erro
             if (data.error) {
                 // se tiver, envia de volta pro cliente
                 console.log('tem erro com o token');
-                console.log(data);
+                // console.log(data);
                 res.status(401).send(data.error);
             } else {
                 // se nao, entao ta tudo certo e ai pode mandar o token
@@ -129,45 +130,38 @@ app.get('/get-token', (req, res) => {
                 const token = response.data['access_token'];
                 const options = { 
                     headers: { 
-                        authorization: `token ${token}` 
+                        // authorization: `token ${token}` 
+                        authorization: `token kdlfjsalsdrowieuroiruqw` 
                     } 
                 };
                 // requisita os dados do usuario
                 axios.get('https://api.github.com/user', options)
                     .then((response) => {
-                        // a api vai responder com os dados ou com um erro se os parametros enviados nao forem validos
-                        const data = response.data;
-                        //testa pra ver se tem erro
-                        if(data.error) {
-                            // se tiver, envia de volta pro cliente
-                            console.log('tem erro com os dados do user');
-                            console.log(data);
-                            res.status(401).send(data.error);
-                        } else {
-                            // se nao, ta tudo certo
-                            console.log('nao tem erro com os dados do user');
-                            const userInfo = {
-                                user: {
-                                    name: response.data['name'],
-                                    avatar_url: response.data['avatar_url']
-                                },
-                                token: token
-                            };
-                            res.json(userInfo);
-                            console.log('deu certo mandar dados do usuario');
-                        }            
+                        // recebe uma resposta
+                        // se der erro, vai pro catch
+                        console.log('nao tem erro com os dados do user');
+                        const userInfo = {
+                            user: {
+                                name: response.data['name'],
+                                avatar_url: response.data['avatar_url']
+                            },
+                            token: token
+                        };
+                        res.json(userInfo);
+                        console.log('deu certo mandar dados do usuario');            
                     })
                     .catch((error) => {
-                        console.log(error);
-                        // console.log(error.response);
                         console.log('n deu certo: erro pedindo dados do usuario');
+                        console.log(error.response.status);
+                        console.log(error.response.statusText);
+                        res.status(error.response.status).send(error.response.statusText);
                     });
             }
         })
         .catch((error) => {
             // erro ao pedir o token
             console.log('erro aqui no catch do token');
-            console.log(error);
+            // console.log(error);
         });
 });
 
@@ -184,24 +178,17 @@ app.get('/get-gist', (req, res) => {
     // faz uma requisiçao à api enviando token e o id do gist
     axios.get(`https://api.github.com/gists/${gist_id}`, options)
         .then((response) => {
-            // recebe uma resposta, que pode ser o gist em si ou um erro
+            // recebe uma resposta
+            // se der erro, vai pro catch
             const data = response.data;
-            // se for erro, vai ter essa propriedade erro
-            if(data.error) {
-                console.log('tem erro com o gist');
-                console.log(data);
-                // ai envia o erro ao cliente
-                // revisar essa parte de erros
-                res.status(401).send(data.error);
-            } else {
-                // se nao for erro, envia os dados ao cliente no formato json
-                res.json(data);
-                console.log('deu certo mandar o gist');
-            }
+            res.json(data);
+            console.log('deu certo mandar o gist');
         })
         .catch((error) => {
             console.log('erro ao pedir o gist');
-            // console.log(error.Error);
+            console.log(error.response.status);
+            console.log(error.response.statusText);
+            res.status(error.response.status).send(error.response.statusText);
         });
 });
 
@@ -218,24 +205,17 @@ app.get('/get-comments', (req, res) => {
     // faz uma requisiçao à api enviando token e o id do gist
     axios.get(`https://api.github.com/gists/${gist_id}/comments`, options)
         .then((response) => {
-            // recebe uma resposta, que pode ser o gist em si ou um erro
+            // recebe uma resposta
+            // se der erro, vai pro catch
             const data = response.data;
-            // se for erro, vai ter essa propriedade erro
-            if(data.error) {
-                console.log('tem erro com os comments');
-                console.log(data);
-                // ai envia o erro ao cliente
-                // revisar essa parte de erros
-                res.status(401).send(data.error);
-            } else {
-                // se nao for erro, envia os dados ao cliente no formato json
-                res.json(data);
-                console.log('deu certo mandar os comments');
-            }
+            res.json(data);
+            console.log('deu certo mandar os comments');
         })
         .catch((error) => {
             console.log('erro catch comments');
-            // console.log(error)
+            console.log(error.response.status);
+            console.log(error.response.statusText);
+            res.status(error.response.status).send(error.response.statusText);
         });
 });
 
@@ -269,6 +249,7 @@ app.get('/post-comment', (req, res) => {
         .catch((error) => {
             // erro ao postar comentario
             console.log('erro aqui no catch do comentario');
+            console.log(error);
             res.status(error.response.status).send(error.response.statusText);
         });
 });
